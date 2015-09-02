@@ -3068,7 +3068,7 @@ fieldset[disabled] a.btn {
 }
 .btn-default {
   color: #ffffff;
-  background-color: #f05f40;
+  background-color: transparent;
   border-color: #f05f40;
   font-family:'Open Sans','Helvetica Neue',Arial,sans-serif;;
   font-size:17px;
