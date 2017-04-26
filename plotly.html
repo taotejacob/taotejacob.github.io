@@ -1,0 +1,70 @@
+<head>
+<!-- Plotly.js -->
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <!-- Plotly chart will be drawn inside this DIV -->
+<div id="myDiv2" style="width:600px;height:250px;"></div>
+    <br>
+    <div id="myDiv" style="width:600px;height:250px;"></div>
+    <script>
+        d3.json("mva_data.geojson", function(d) {
+            var hhdense = new Array();
+            var msp = new Array();
+            for(var i = 0; i < d.features.length; i++){
+                hhdense.push(d.features[i].properties["hhdense"])
+                msp.push(d.features[i].properties["mspall_1416"])
+            } 
+
+            var data = [{
+                x: hhdense,
+                type: 'histogram',
+                xbins: {
+                    start: 0, 
+                    end: 20,
+                    size: .3,
+                },
+                
+                marker: {
+                    color: 'rgba(100,250,100,0.7)',
+                },
+            }];
+            
+            var layout = {
+                bargap: 0.05,
+                title: 'Housing Density',
+                showlegend: false,
+                xaxis: {
+                    title: 'Parcels per Acre', 
+                    //range:[0,30],
+                },
+                
+            };
+
+            Plotly.newPlot('myDiv2', data, layout);
+            
+            var d2 = [{
+                x: msp,
+                type: 'histogram',                
+                marker: {
+                    color: 'rgba(100,250,100,0.7)',
+                },
+            }];
+            
+            var l2 = {
+                bargap: 0.05,
+                title: 'Median sales price',
+                showlegend: false,
+                xaxis: {
+                    title: 'Prices', 
+                    range:[1000,400000],
+                },
+                
+            };
+
+            Plotly.newPlot('myDiv', d2, l2);
+        });
+    </script>
+</body>

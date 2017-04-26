@@ -1,0 +1,61 @@
+<html>
+<head>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+
+  <style>
+    #map{ height: 100% }
+  </style>
+</head>
+    
+<body>
+    <div id = "container">
+        <div id="map"></div>
+    </div>
+  <script>
+
+  // initialize the map
+  var map = L.map('map').setView([39.0997, -94.5786], 10);
+      
+  // load a tile layer
+  L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+    {
+      attribution: 'None for now',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+      
+$.getJSON('mva_data.geojson',function(hoodData){
+    var mvaLayer = L.geoJson( hoodData, {
+          style: function(feature){
+            var fillColor,
+                density = feature.properties.clstr_final;
+            if      ( density == 'A' ) fillColor = "#ffffd9";
+            else if ( density == 'B' ) fillColor = "#edf8b1";
+            else if ( density == 'C' ) fillColor = "#c7e9b4";
+            else if ( density == 'D' ) fillColor = "#7fcdbb";
+            else if ( density == 'E' ) fillColor = "#41b6c4";
+            else if ( density == 'F' ) fillColor = "#1d91c0";
+            else if ( density == 'G' ) fillColor = "#225ea8";
+            else if ( density == 'H' ) fillColor = "#253494";
+            else if ( density == 'I' ) fillColor = "#081d58";  
+            else fillColor = "#f7f7f7";  // no data
+            return { color: "#999", weight: 1, fillColor: fillColor, fillOpacity: .6 };
+          },
+          onEachFeature: function( feature, layer ){
+            layer.bindPopup( "<strong>" + feature.properties.clstr_final + "</strong> Market<br/>" )
+          }  
+
+        }).addTo(map);
+    
+  });     
+
+  </script>
+</body>
+</html>
+
+
+
+
+

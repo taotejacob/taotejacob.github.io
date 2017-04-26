@@ -1,0 +1,104 @@
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" 
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" 
+        crossorigin="anonymous">
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="js/d3.js"></script>
+    <script type="text/javascript" src="js/crossfilter.js"></script>
+    <script type="text/javascript" src="js/dc.js"></script>
+    <script type="text/javascript" src="js/leaflet.js"></script>
+    <link rel="stylesheet" href="http://dc-js.github.io/dc.js/css/dc.css">
+
+  <style>
+    #map{ height: 100% }
+  </style>
+</head>
+ 
+<body>
+    <nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+        <a class="navbar-brand" href="#">KCMO MVA Dashbard</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Main</a></li>
+            <li><a href="index.html">Full Map</a></li>
+            <li><a href="d3.html">Graphs</a></li>
+            <li><a href="storymap.html">Story Map</a></li>
+        </ul>
+        </div>
+    </nav>
+  <br>
+    <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="row" style="height: 250px">
+              <div id="pie1"></div>
+        </div>
+        <div class="row" style="height: 250px">
+          <div class="well"> 
+              Another pretty graph goes here
+            </div>
+        </div>
+        <div class="row" style="height: 250px">
+          <div class="well"> 
+              A third graph goes here
+            </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="well"> <div id="map"></div></div>
+      </div>
+    </div>
+    </div>
+    <script>
+        d3.json('mva_data.geojson', function(data){
+            var //hist1 = dc.barChart("#hist1"),
+                pie1  = dc.pieChart("#pie1");
+            
+            var mapData = [];
+            
+            for (var i = 0; i < data.features.length; i++){
+                //console.log(data["features"][i]["properties"]["mspall_1416"]);
+                mapData.push({
+                    geo_id:      data["features"][i]["properties"]["geo_id"],
+                    hhdense:     data["features"][i]["properties"]["hhdense"],
+                    msp:         data["features"][i]["properties"]["mspall_1416"],
+                    clstr_final: data["features"][i]["properties"]["clstr_final"],
+                    cnt: 1
+                });
+            };
+            
+            var ndx = crossfilter(mapData),
+                totCounts     = ndx.groupAll().value(),
+                
+                mvaDim = ndx.dimension(function (d) {
+                    return d.clstr_final;
+                }),
+                
+                mvaGroup = mvaDim.group().reduceSum(function (d) {
+                    return d.cnt;
+                });
+            
+            pie1.width(200)
+                .height(200)
+                //.slicesCap(4)
+                .dimension(mvaDim)
+                .group(mvaGroup)
+                //.margins({top: 10, right: 20, bottom: 50, left: 50});
+            
+            
+            
+            dc.renderAll();
+            
+            
+            
+        });
+    
+    
+    </script>
+</body>
+
+    

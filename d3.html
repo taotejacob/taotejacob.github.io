@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style>
+
+    body {
+      font: 10px sans-serif;
+    }
+
+    .bar rect {
+      shape-rendering: crispEdges;
+    }
+
+    .bar text {
+      fill: #999999;
+    }
+
+    .axis path, .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    </style>
+</head>
+
+<body>
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+        <a class="navbar-brand" href="#">KCMO MVA Dashbard</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><a href="dashboard.html">Main</a></li>
+            <li><a href="index.html">Full Map</a></li>
+            <li><a href="d3.html">Graphs</a></li>
+            <li><a href="storymap.html">Story Map</a></li>
+        </ul>
+        </div>
+    </nav>    
+    
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+d3.json("mva_data.geojson", function(d) {
+    var values = new Array();
+    for(var i = 0; i < d.features.length; i++){
+        values.push(d.features[i].properties["hhdense"])
+    }
+    var color = "steelblue";
+
+    // A formatter for counts.
+    var formatCount = d3.format(",.0f");
+
+    var margin = {
+        top: 20, 
+        right: 30, 
+        bottom: 30, 
+        left: 30
+    },
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var min = d3.min(values);       //set min value for x-axis
+    var max = 30 //d3.max(values);  //set max value for x-axis
+
+    var x = d3.scale.linear()
+              .domain([min, max])
+              .range([0, width]);
+
+    // Generate a histogram using twenty uniformly-spaced bins.
+    var data = d3.layout.histogram()
+                 .bins(x.ticks(20))
+                 (values);
+
+    var yMax = d3.max(data, function(d){return d.length});
+    var yMin = d3.min(data, function(d){return d.length});
+    
+    var colorScale = d3.scale.linear()
+                       .domain([yMin, yMax])
+                       .range([d3.rgb(color).brighter(), d3.rgb(color).darker()]);
+
+    var y = d3.scale.linear()
+        .domain([0, yMax])
+        .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var bar = svg.selectAll(".bar")
+        .data(data)
+        .enter().append("g")
+        .attr("class", "bar")
+        .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+
+    bar.append("rect")
+       .attr("x", 1)
+       .attr("width", (x(data[0].dx) - x(0)) - 1)
+       .attr("height", function(d) { return height - y(d.y); })
+       .attr("fill", function(d) { return colorScale(d.y) })
+    .on("mouseover", function(){
+        d3.select(this).attr("fill", "red");
+    })
+    .on("mouseout", function(d, i){
+        d3.select(this).attr("fill", function(d) { 
+            return colorScale(d.y) 
+        });
+    });
+
+    bar.append("text")
+       .attr("dy", ".75em")
+       .attr("y", -12)
+       .attr("x", (x(data[0].dx) - x(0)) / 2)
+       .attr("text-anchor", "middle")
+       .text(function(d) { return formatCount(d.y); });
+
+    svg.append("g")
+       .attr("class", "x axis")
+       .attr("transform", "translate(0," + height + ")")
+       .call(xAxis);``
+    
+});
+    
+    
+
+
+</script>

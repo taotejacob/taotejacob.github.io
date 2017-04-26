@@ -1,0 +1,83 @@
+<head>
+    <script type="text/javascript" src="js/d3.js"></script>
+    <script type="text/javascript" src="js/crossfilter.js"></script>
+    <script type="text/javascript" src="js/dc.js"></script>
+    <script type="text/javascript" src="js/leaflet.js"></script>
+    <script type="text/javascript" src="js/underscore-min.js"></script>
+</head>
+
+<body>
+    <div id="pieChart"></div>
+    <div id="rowChart"></div>
+    <script>
+            var pieChart = dc.pieChart("#pieChart"),
+                rowChart = dc.rowChart("#rowChart");
+        
+        
+   //     d3.json("mva_data.geojson", function(data){
+
+        var data = [{
+    "city": "New York",
+        "neighborhood": "N/A",
+        "hits": 200
+}, {
+    "city": "New York",
+        "neighborhood": "Brooklyn",
+        "hits": 225
+}, {
+    "city": "New York",
+        "neighborhood": "Queens",
+        "hits": 1
+}, {
+    "city": "San Francisco",
+        "neighborhood": "Chinatown",
+        "hits": 268
+}, {
+    "city": "San Francisco",
+        "neighborhood": "Downtown",
+        "hits": 22
+}, {
+    "city": "Seattle",
+        "neighborhood": "N/A",
+        "hits": 2
+}, {
+    "city": "Seattle",
+        "neighborhood": "Freemont",
+        "hits": 25
+}];
+        
+            var ndx = crossfilter(data),
+                cityDimension = ndx.dimension(function (d) {
+                    return d.city;
+                }),
+                
+                cityGroup = cityDimension.group().reduceSum(function (d) {
+                    return d.hits;
+                }),
+                
+                neighborhoodDimension = ndx.dimension(function (d) {
+                    return d.neighborhood;
+                }),
+                neighborhoodGroup = neighborhoodDimension.group().reduceSum(function (d) {
+                    return d.hits;
+                });
+
+            pieChart.width(200)
+                .height(200)
+                .slicesCap(4)
+                .dimension(cityDimension)
+                .group(cityGroup);
+
+            rowChart.width(500)
+                .height(500)
+                .dimension(neighborhoodDimension)
+                .group(neighborhoodGroup);
+
+            dc.renderAll();
+        
+//        });
+    
+    </script>
+
+
+</body>

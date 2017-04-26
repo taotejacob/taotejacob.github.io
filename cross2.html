@@ -1,0 +1,165 @@
+<head>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="js/d3.js"></script>
+    <script type="text/javascript" src="js/crossfilter.js"></script>
+    <script type="text/javascript" src="js/dc.js"></script>
+    <script type="text/javascript" src="js/leaflet.js"></script>
+    <link rel="stylesheet" href="http://dc-js.github.io/dc.js/css/dc.css">
+    <script type="text/javascript" src="js/underscore-min.js"></script>
+    <link rel="stylesheet" href="http://dc-js.github.io/dc.js/css/dc.css">
+</head>
+
+<body>
+    <div id="pieChart"></div>
+    <div id="Chart2"></div>
+    <div id="Chart1"></div>
+    <a href="javascript:filterAll();dc.redrawAll();">reset</a>
+    <script>
+
+        
+
+        
+        
+        d3.json("mva_data.geojson", function(data){
+
+            var zaBar = dc.barChart("#Chart1");
+            var zaBar2= dc.barChart("#Chart2");
+            var zaPie = dc.pieChart("#pieChart")
+            //console.log(data.features);
+            
+            var zaMapData = [];
+            
+            for (var i = 0; i < data.features.length; i++){
+                //console.log(data["features"][i]["properties"]["geo_id"]);
+                console.log(data["features"][i]["properties"]["mspall_1416"]);
+                zaMapData.push({
+                    geo_id: data["features"][i]["properties"]["geo_id"],
+                    hhdense: data["features"][i]["properties"]["hhdense"],
+                    msp: data["features"][i]["properties"]["mspall_1416"],
+                    clstr_final: data["features"][i]["properties"]["clstr_final"],
+                    cnt: 1
+                });
+            };
+            
+               
+
+            //var ndx = crossfilter(zaMapData);
+           // console.log(zaMapData);
+            
+            //var all = ndx.groupAll();
+            
+            var ndx = crossfilter(zaMapData),
+                
+                mvaDim = ndx.dimension(function (d) {
+                    return d.clstr_final;
+                }),
+                
+                mvaGroup = mvaDim.group().reduceSum(function (d) {
+                    return d.cnt;
+                }),
+                
+                denseDim = ndx.dimension(function (d) {
+                    return d.hhdense;
+                }),
+                
+                denseGroup = denseDim.group().reduceCount(function (d) {
+                    return d.hhdense;
+                });
+                
+                
+            
+                var Nbin = 50,                  
+                    Mmax = d3.max(zaMapData, function(d) {
+                        return +d.msp;
+                        }),                
+                    Mmin = d3.min(zaMapData, function(d) {
+                        return +d.msp;
+                    }),                 
+                    binWidth = Math.floor((Mmax - Mmin) / Nbin);
+            
+            //        
+            //      var histDimension = ndx.dimension(function(d) {                
+            //              return Math.floor(+d.msp / binWidth) * binWidth;
+            //          });
+            //    
+            //      var totCounter = histDimension.groupAll(),
+            //          histGroup  = histDimension.group(); 
+            //        
+            
+                var totCounts     = ndx.groupAll().value(),
+                    histDimension = ndx.dimension(function(d) {
+                        return Math.floor(d.msp / binWidth) * binWidth;
+                    }),
+                    histGroup     = histDimension.group().reduceCount(function(d) {
+                        return 1 / (binWidth * totCounts);
+                    }),
+                    totCounter    = histDimension.groupAll();
+            
+            console.log(histGroup)
+         
+                
+                var mspDim = ndx.dimension(function (d) {
+                    return d.msp;
+                    }),
+                    
+                    mspGroup = mspDim.group().reduceCount(function(d){
+                        return d.msp;
+                    });
+                    
+            //console.log(mspGroup);
+
+            zaPie.width(200)
+                .height(200)
+                //.slicesCap(4)
+                .dimension(mvaDim)
+                .group(mvaGroup);
+            
+            zaBar.width(500)
+                .height(500)
+                .dimension(histDimension)
+                .group(histGroup)
+                .brushOn(true)
+                .x(d3.scale.linear().domain([Mmin, Mmax]))
+                .xUnits(function(){return 100;})
+                .valueAccessor(function(kv) {
+                    var total = totCounter.value() + 0.01;
+                    return total && (kv.value / (binWidth  * total));
+                })
+                .yAxisLabel("Median Sales Price, 14-15")
+                //.elasticY(false)
+            ;
+
+            zaBar2.width(500)
+                 .height(500)
+                 .dimension(mspDim)
+                 .group(mspGroup)
+                 .brushOn(true)
+                //.xAxis().ticks(5)
+                 .x(d3.scale.linear().domain([0,Mmax]).range(5))
+                 .gap(1000);
+            
+            
+            //zaBar.xAxis().tickFormat(function(d) {return d*10}); // convert back to base unit
+//zaBar.yAxis().ticks(2);
+            
+            
+            dc.renderAll();
+            
+
+            
+        });
+        
+
+        
+        
+        
+        
+        
+        
+    </script>
+
+
+</body>

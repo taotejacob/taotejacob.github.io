@@ -1,46 +1,114 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<style>
-			body { 
-				  background: url(/images/avacado-mango.jpg) no-repeat center center fixed; 
-				  -webkit-background-size: cover;
-				  -moz-background-size: cover;
-				  -o-background-size: cover;
-				  background-size: cover;
-				}
-		</style>
+<html>
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <script src="L.Control.SlideMenu.js"></script>
+    <link rel="stylesheet" href="L.Control.SlideMenu.css">
 
-			<link rel="stylesheet" href="/stylesheets/bootstrap.css">
-			<script src="/stylesheets/bootstrap.js"></script>
+  <style>
+    #map{ height: 100% }
+  </style>
+</head>
+    
+<body>
+    <nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+        <a class="navbar-brand" href="#">KCMO MVA Dashbard</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><a href="dashboard.html">Main</a></li>
+            <li><a href="index.html">Full Map</a></li>
+            <li><a href="d3.html">Graphs</a></li>
+            <li><a href="storymap.html">Story Map</a></li>
+        </ul>
+        </div>
+    </nav>
+    <div class = "container">
+            <div id="map"></div>
+    </div>
+            
+    </div>
+  <script>
 
-	</head>
+  // initialize the map
+  var map = L.map('map', {
+      center: [39.0997, -94.5786],
+      zoom: 10,
+      zoomControl: false});
+      
+  // load a tile layer
+  L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+    {
+      attribution: 'None for now',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+var controlLayers = L.control.layers().addTo(map);
+      
+$.getJSON('mva_data.geojson',function(hoodData){
+    var mvaLayer = L.geoJson( hoodData, {
+          style: function(feature){
+            var fillColor,
+                density = feature.properties.clstr_final;
+            if      ( density == 'A' ) fillColor = "#ffffd9";
+            else if ( density == 'B' ) fillColor = "#edf8b1";
+            else if ( density == 'C' ) fillColor = "#c7e9b4";
+            else if ( density == 'D' ) fillColor = "#7fcdbb";
+            else if ( density == 'E' ) fillColor = "#41b6c4";
+            else if ( density == 'F' ) fillColor = "#1d91c0";
+            else if ( density == 'G' ) fillColor = "#225ea8";
+            else if ( density == 'H' ) fillColor = "#253494";
+            else if ( density == 'I' ) fillColor = "#081d58";  
+            else fillColor = "#f7f7f7";  // no data
+            return { color: "#f7f7f7", weight: 0, fillColor: fillColor, fillOpacity: .8 };
+          },
+          onEachFeature: function( feature, layer ){
+            layer.bindPopup( "<strong>" + feature.properties.clstr_final + "</strong> Market<br/>" )
+          }  
 
+        }).addTo(map);
+    controlLayers.addBaseLayer(mvaLayer, 'MVA Results');
+    
+  });
 
-	<body>
-		<div class="text-right"><a href="{{logout_url}}" class="btn btn-xs btn-warning">Log Out</a></div>
-		<div class="container">
-			<div style="margin-top:10%"></div>
-			<div class="row text-center">
-				<div class="col-md-2"></div>
-				<div class="col-md-8">
+$.getJSON('mva_data.geojson',function(hoodData){
+    var mvaLayer = L.geoJson( hoodData, {
+          style: function(feature){
+            var fillColor,
+                density = feature.properties.hhdense;
+            if      ( density > 3 ) fillColor = "#ffffd9";
+            else if ( density > 1 ) fillColor = "#edf8b1"; 
+            else fillColor = "#f7f7f7";  // no data
+            return { color: "#999", weight: 1, fillColor: fillColor, fillOpacity: .6 };
+          },
+          onEachFeature: function( feature, layer ){
+            layer.bindPopup( "<strong>" + feature.properties.hhdense + "</strong> per acre<br/>" )
+          }  
 
-					<div class="row">
-						<h1 class="h1-white">Welcome to Taco Night!</h1>
-					</div>
-
-					<br><br>
-
-					<div class="row">
-							<a href="/about" class="btn btn-lg btn-default">About</a>&nbsp;&nbsp;&nbsp;
-							<a href="auth/rsvp" class="btn btn-lg btn-default">RSVP</a>&nbsp;&nbsp;&nbsp;
-							<a href="auth/signup" class="btn btn-lg btn-default">Sign Up</a>						
-					</div>
-
-				</div>
-				<div class="col-md-2"></div>
-			</div>
-		</div>
-	</body>
-
+        }).addTo(map);
+    controlLayers.addBaseLayer(mvaLayer, 'Density');
+    
+  });  
+      var contents = '<h3>The Kansas City MVA</h3><p>This might provide lots of information about the KCMO MVA like how it was created and who produced it.</p>';
+      
+      var slideMenu = L.control.slideMenu('', {
+          position: 'topleft', 
+          menuposition: 'topleft', 
+          width: '30%', 
+          height: '400px', 
+          delay: '50'
+      }).addTo(map);
+      
+      slideMenu.setContents(contents);
+  </script>
+</body>
 </html>
+
+
+
+
+
