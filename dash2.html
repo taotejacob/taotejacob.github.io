@@ -49,11 +49,54 @@
         </div>
       </div>
       <div class="col-md-6">
-        <div class="well"> <div id="map"></div></div>
+        <div class="well"> 
+          <div id="map"></div>
+        </div>
       </div>
     </div>
     </div>
     <script>
+      var map = L.map('map', {
+      center: [39.0997, -94.5786],
+      zoom: 10,
+      zoomControl: false});
+      
+  // load a tile layer
+  L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+    {
+      attribution: 'None for now',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+var controlLayers = L.control.layers().addTo(map);
+      
+$.getJSON('mva_data.geojson',function(hoodData){
+    var mvaLayer = L.geoJson( hoodData, {
+          style: function(feature){
+            var fillColor,
+                density = feature.properties.clstr_final;
+            if      ( density == 'A' ) fillColor = "#ffffd9";
+            else if ( density == 'B' ) fillColor = "#edf8b1";
+            else if ( density == 'C' ) fillColor = "#c7e9b4";
+            else if ( density == 'D' ) fillColor = "#7fcdbb";
+            else if ( density == 'E' ) fillColor = "#41b6c4";
+            else if ( density == 'F' ) fillColor = "#1d91c0";
+            else if ( density == 'G' ) fillColor = "#225ea8";
+            else if ( density == 'H' ) fillColor = "#253494";
+            else if ( density == 'I' ) fillColor = "#081d58";  
+            else fillColor = "#f7f7f7";  // no data
+            return { color: "#f7f7f7", weight: 0, fillColor: fillColor, fillOpacity: .8 };
+          },
+          onEachFeature: function( feature, layer ){
+            layer.bindPopup( "<strong>" + feature.properties.clstr_final + "</strong> Market<br/>" )
+          }  
+        }).addTo(map);
+    controlLayers.addBaseLayer(mvaLayer, 'MVA Results');
+    
+  });
+      
+      
+      
         d3.json('mva_data.geojson', function(data){
             var //hist1 = dc.barChart("#hist1"),
                 pie1  = dc.pieChart("#pie1");
