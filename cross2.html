@@ -1,24 +1,47 @@
 <head>
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
-  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+    <link rel="stylesheet" href="http://dc-js.github.io/dc.js/css/dc.css">
+    
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="js/d3.js"></script>
     <script type="text/javascript" src="js/crossfilter.js"></script>
     <script type="text/javascript" src="js/dc.js"></script>
     <script type="text/javascript" src="js/leaflet.js"></script>
-    <link rel="stylesheet" href="http://dc-js.github.io/dc.js/css/dc.css">
+    <script type="text/javascript" src="js/dc-leaflet.js"></script>
     <script type="text/javascript" src="js/underscore-min.js"></script>
-    <link rel="stylesheet" href="http://dc-js.github.io/dc.js/css/dc.css">
+    
+    
 </head>
 
 <body>
-    <div id="pieChart"></div>
-    <div id="Chart2"></div>
-    <div id="Chart1"></div>
-    <a href="javascript:filterAll();dc.redrawAll();">reset</a>
-    <script>
+        <div class="row" style="padding-left: 20px;">
+            <div class="col-md-7">
+                <div class="row">
+                        <div id="pieChart"></div>                 
+                </div>
+                <br><br>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="col-sm-12 well">
+                            <div id="Chart2"></div>
+                        </div>                     
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="col-sm-12 well">
+                            <div id="Chart1"></div>
+                        </div>                  
+                    </div>
+                </div>
 
+            </div>
+            <div class="col-md-5">
+                <div id="us-chart" style="width:100%; height:100%;"></div>    
+            </div>
+            
+        
+        </div>
+    <script>
         
 
         
@@ -27,14 +50,15 @@
 
             var zaBar = dc.barChart("#Chart1");
             var zaBar2= dc.barChart("#Chart2");
-            var zaPie = dc.pieChart("#pieChart")
+            var zaPie = dc.pieChart("#pieChart");
+            var usChart = dc.leafletChoroplethChart("#us-chart");
             //console.log(data.features);
             
             var zaMapData = [];
             
             for (var i = 0; i < data.features.length; i++){
                 //console.log(data["features"][i]["properties"]["geo_id"]);
-                console.log(data["features"][i]["properties"]["mspall_1416"]);
+                //console.log(data["features"][i]["properties"]["mspall_1416"]);
                 zaMapData.push({
                     geo_id: data["features"][i]["properties"]["geo_id"],
                     hhdense: data["features"][i]["properties"]["hhdense"],
@@ -44,111 +68,147 @@
                 });
             };
             
-               
 
-            //var ndx = crossfilter(zaMapData);
-           // console.log(zaMapData);
+            var Nbin = 25,                  
+                msp_ext = d3.extent(zaMapData, function(d) {
+                    return +d.msp;
+                }),             
+                msp_w = Math.floor((msp_ext[1] - msp_ext[0]) / Nbin),
+                hhd_ext = d3.extent(zaMapData, function(d){
+                    return +d.hhdense;
+                }),
+                hhd_w = Math.floor((hhd_ext[1] - hhd_ext[0]) / Nbin);
             
-            //var all = ndx.groupAll();
+            _.each(zaMapData, function(d) {
+                d.hhdense = +d.hhdense
+                d.hhdense = Math.floor(+d.hhdense / hhd_w) * hhd_w
+                d.msp = +d.msp
+                d.msp_n = Math.floor(+d.msp / msp_w)*msp_w
+                d.clstr_final = d.clstr_final
+                    if (d.clstr_final == 'A') { 
+                        d.clstr_n = 1
+                    } else if (d.clstr_final == 'B') { 
+                        d.clstr_n = 2;
+                    } else if (d.clstr_final == 'C') { 
+                        d.clstr_n = 3;
+                    } else if (d.clstr_final == 'D') { 
+                        d.clstr_n = 4;
+                    } else if (d.clstr_final == 'E') { 
+                        d.clstr_n = 5;
+                    } else if (d.clstr_final == 'F') { 
+                        d.clstr_n = 6;
+                    } else if (d.clstr_final == 'G') { 
+                        d.clstr_n = 7;
+                    } else if (d.clstr_final == 'H') { 
+                        d.clstr_n = 8;
+                    } else if (d.clstr_final == 'I') { 
+                        d.clstr_n = 9;
+                    } else { 
+                        d.clstr_n = 10
+                    };
+   
+                    
+                
+                
+                
+                
+            });
+            console.log(zaMapData);
+
+         
+            
             
             var ndx = crossfilter(zaMapData),
                 
-                mvaDim = ndx.dimension(function (d) {
+                mvaDim = ndx.dimension(function(d) {
                     return d.clstr_final;
                 }),
                 
-                mvaGroup = mvaDim.group().reduceSum(function (d) {
+                mvaGroup = mvaDim.group().reduceSum(function(d) {
                     return d.cnt;
                 }),
                 
-                denseDim = ndx.dimension(function (d) {
+                geoDim = ndx.dimension(function(d){
+                    return d.geo_id;
+                }),
+                
+                geoGroup = geoDim.group().reduceSum(function(d){
+                    return d.clstr_n;
+                }),
+                
+                denseDim = ndx.dimension(function(d) {
                     return d.hhdense;
                 }),
                 
-                denseGroup = denseDim.group().reduceCount(function (d) {
+                denseGroup = denseDim.group().reduceCount(function(d) {
                     return d.hhdense;
+                }),
+                
+                mspDim = ndx.dimension(function(d) {
+                    return d.msp_n;
+                }),
+                    
+                mspGroup = mspDim.group().reduceCount(function(d) {
+                    return d.msp_n;
                 });
-                
-                
-            
-                var Nbin = 50,                  
-                    Mmax = d3.max(zaMapData, function(d) {
-                        return +d.msp;
-                        }),                
-                    Mmin = d3.min(zaMapData, function(d) {
-                        return +d.msp;
-                    }),                 
-                    binWidth = Math.floor((Mmax - Mmin) / Nbin);
-            
-            //        
-            //      var histDimension = ndx.dimension(function(d) {                
-            //              return Math.floor(+d.msp / binWidth) * binWidth;
-            //          });
-            //    
-            //      var totCounter = histDimension.groupAll(),
-            //          histGroup  = histDimension.group(); 
-            //        
-            
-                var totCounts     = ndx.groupAll().value(),
-                    histDimension = ndx.dimension(function(d) {
-                        return Math.floor(d.msp / binWidth) * binWidth;
-                    }),
-                    histGroup     = histDimension.group().reduceCount(function(d) {
-                        return 1 / (binWidth * totCounts);
-                    }),
-                    totCounter    = histDimension.groupAll();
-            
-            console.log(histGroup)
-         
-                
-                var mspDim = ndx.dimension(function (d) {
-                    return d.msp;
-                    }),
-                    
-                    mspGroup = mspDim.group().reduceCount(function(d){
-                        return d.msp;
-                    });
-                    
-            //console.log(mspGroup);
-
-            zaPie.width(200)
-                .height(200)
-                //.slicesCap(4)
+var colorscale = d3.scale.ordinal()
+        .domain(["A", "B", "C", "D", "E", "F", "G", "H", "I"])
+        .range(["#9F87C7","#C0AAE6","#85ABE3", 
+                "#A2C0EB","#FAFAB6","#FAED85", 
+                "#FFCE7A","#EDBC66","#F7B99E",
+                "#a59d9d","#a59d9d","#a59d9d"]);
+                       
+console.log(colorscale);
+            zaPie.width(300)
+                .height(300)
+                .colors(colorscale)
                 .dimension(mvaDim)
                 .group(mvaGroup);
             
-            zaBar.width(500)
-                .height(500)
-                .dimension(histDimension)
-                .group(histGroup)
+            zaBar.width(375)
+                .height(250)
+                .dimension(denseDim)
+                .group(denseGroup)
                 .brushOn(true)
-                .x(d3.scale.linear().domain([Mmin, Mmax]))
-                .xUnits(function(){return 100;})
-                .valueAccessor(function(kv) {
-                    var total = totCounter.value() + 0.01;
-                    return total && (kv.value / (binWidth  * total));
-                })
-                .yAxisLabel("Median Sales Price, 14-15")
-                //.elasticY(false)
-            ;
+                .xUnits(function(){return Nbin;})
+                .x(d3.scale.linear().domain([0, hhd_ext[1]]))
+                .xAxisLabel("Density, 14-15");
 
-            zaBar2.width(500)
-                 .height(500)
+            zaBar2.width(375)
+                 .height(250)
                  .dimension(mspDim)
                  .group(mspGroup)
                  .brushOn(true)
-                //.xAxis().ticks(5)
-                 .x(d3.scale.linear().domain([0,Mmax]).range(5))
-                 .gap(1000);
+                 .xUnits(function(){return Nbin;})
+                 .x(d3.scale.linear().domain([0,msp_ext[1]]).range(5))
+                 .xAxisLabel("MSP, 14-15");  
             
+            zaBar2.xAxis().ticks(4);
             
-            //zaBar.xAxis().tickFormat(function(d) {return d*10}); // convert back to base unit
-//zaBar.yAxis().ticks(2);
-            
+            usChart.width(500)
+                .height(500)
+                .brushOn(true)
+                .dimension(geoDim)
+                .group(geoGroup)
+                .geojson(data.features)
+                .featureKeyAccessor(function(data) {
+                    return data.properties.geo_id;
+                    })
+                .colors(d3.scale.quantize().range(
+                ["rgba(148, 149, 150, 0.28)",
+                 "#9F87C7", "#C0AAE6", "#85ABE3", 
+                 "#A2C0EB", "#FAFAB6", "#FAED85", 
+                 "#FFCE7A", "#EDBC66", "#F7B99E", 
+                 "rgba(148, 149, 150, 0.28)"])
+                       )
+                .colorDomain([0, 10])
+                .colorCalculator(function (d) { return d ? usChart.colors()(d.value) : '#dd1212'; })
+                .center([39.0997, -94.5786])
+                .zoom(10);
+               
             
             dc.renderAll();
             
-
             
         });
         
