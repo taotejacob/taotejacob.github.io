@@ -75,16 +75,16 @@ $.getJSON('mva_data.geojson',function(hoodData){
           style: function(feature){
             var fillColor,
                 density = feature.properties.clstr_final;
-            if      ( density == 'A' ) fillColor = "#ffffd9";
-            else if ( density == 'B' ) fillColor = "#edf8b1";
-            else if ( density == 'C' ) fillColor = "#c7e9b4";
-            else if ( density == 'D' ) fillColor = "#7fcdbb";
-            else if ( density == 'E' ) fillColor = "#41b6c4";
-            else if ( density == 'F' ) fillColor = "#1d91c0";
-            else if ( density == 'G' ) fillColor = "#225ea8";
-            else if ( density == 'H' ) fillColor = "#253494";
-            else if ( density == 'I' ) fillColor = "#081d58";  
-            else fillColor = "#f7f7f7";  // no data
+            if      ( density == 'A' ) fillColor = "#9F87C7";
+            else if ( density == 'B' ) fillColor = "#C0AAE6";
+            else if ( density == 'C' ) fillColor = "#85ABE3";
+            else if ( density == 'D' ) fillColor = "#A2C0EB";
+            else if ( density == 'E' ) fillColor = "#FAFAB6";
+            else if ( density == 'F' ) fillColor = "#FAED85";
+            else if ( density == 'G' ) fillColor = "#FFCE7A";
+            else if ( density == 'H' ) fillColor = "#EDBC66";
+            else if ( density == 'I' ) fillColor = "#F7B99E";  
+            else fillColor = "#000000";  // no data
             return { color: "#f7f7f7", weight: 0, fillColor: fillColor, fillOpacity: .8 };
           },
           onEachFeature: function( feature, layer ){
@@ -99,7 +99,9 @@ $.getJSON('mva_data.geojson',function(hoodData){
       
         d3.json('mva_data.geojson', function(data){
             var //hist1 = dc.barChart("#hist1"),
-                pie1  = dc.pieChart("#pie1");
+                pie1  = dc.pieChart("#pie1"),
+                chart1= dc.barChart("#chart1");
+                
             
             var mapData = [];
             
@@ -123,15 +125,28 @@ $.getJSON('mva_data.geojson',function(hoodData){
                 
                 mvaGroup = mvaDim.group().reduceSum(function (d) {
                     return d.cnt;
+                }),
+          
+                mspDim = ndx.dimension(function(d) {
+                        return +d.msp;
+                }),
+          
+                mspGroup = mspDim.group().reduceSum(function(d){
+                  return d.msp;
                 });
+          
             
             pie1.width(200)
                 .height(200)
                 //.slicesCap(4)
                 .dimension(mvaDim)
-                .group(mvaGroup)
+                .group(mvaGroup);
                 //.margins({top: 10, right: 20, bottom: 50, left: 50});
-            
+           
+           chart1.width(240)
+                 .height(250)
+                 .dimension(mspDim)
+                 .group(mspGroup);
             
             
             dc.renderAll();
