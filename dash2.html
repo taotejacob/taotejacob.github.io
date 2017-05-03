@@ -147,8 +147,7 @@ $.getJSON('mva_data.geojson',function(hoodData){
                  .height(250)
                  .dimension(mspDim)
                  .group(mspGroup)
-                 .x(d3.scale.linear().domain([0,600000]).range(5))
-                 .brushOn(True);
+                 .x(d3.scale.linear().domain([0,600000]).range(5));
             
             
             dc.renderAll();
